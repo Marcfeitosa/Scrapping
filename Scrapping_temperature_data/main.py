@@ -3,7 +3,9 @@ import requests
 import selectorlib
 import smtplib, ssl
 import os
-import time
+import sqlite3
+
+connection = sqlite3.connect("temperaturesdb.db")
 
 URL = "https://programmer100.pythonanywhere.com"
 HEADERS = {
@@ -20,32 +22,48 @@ def extract(source):
     value = extractor.extract(source)["home"]
     return value
 
-with open("data.txt", "w") as file:
-    file.write("date,temperature" + "\n")
+# Old block of code
+# with open("data.txt", "w") as file:
+#     file.write("date,temperature" + "\n")
 
 def store(extracted):
-    with open("data.txt", "r") as file:
-        content = file.read().strip()
-    if extracted not in content:  # Verifica se a temperatura extraída não está presente no conteúdo do arquivo
-        timestamp = datetime.now().isoformat()  # Obtém a data atual
-        with open("data.txt", "a") as file:
-            file.write(f"{timestamp},{extracted}\n")  # Escreve a nova temperatura no arquivo
+    now = datetime.now().strftime("%y-%m-%d-%H-%M-%S")
+    cursor = connection.cursor()
+    cursor.execute("INSERT INTO temperatures VALUES(?,?)", (now, extracted))
+    connection.commit()
 
+    #Old block of code
+    # with open("data.txt", "r") as file:
+    #     content = file.read().strip()
+    # if extracted not in content:  # Verifica se a temperatura extraída não está presente no conteúdo do arquivo
+    #     timestamp = datetime.now().isoformat()  # Obtém a data atual
+    #     with open("data.txt", "a") as file:
+    #         file.write(f"{timestamp},{extracted}\n")  # Escreve a nova temperatura no arquivo
 
-def read(extracted):
-    with open("data.txt", "r") as file:
-        return file.read()
+# Old block of code
+# def read(extracted):
+#     row = extracted.split(",")
+#     row = [item.strip() for item in row]
+#     date, temperature = row
+#     cursor.execute("SELECT * FROM temperatures WHERE date=? AND temperature=?", (date, temperature))
+#     rows = cursor.fetchall()
+#     print(rows)
+#     return rows
+
+    # with open("data.txt", "r") as file:
+    #     return file.read()
 
 # you may need to install a certification in Python, so it can run it. If you see the error:
 # ssl.SSLCertificationError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certification
 if __name__ == "__main__":
-    while True:
-        scraped = scrape(URL)
-        extracted = extract(scraped)
-        print(extracted)
+    scraped = scrape(URL)
+    extracted = extract(scraped)
+    print(extracted)
+    print(extracted)
 
-        content = read(extracted)
-
-        if extracted != read(extracted):
-            store(extracted)
-        time.sleep(2)
+    # Old block of code
+    # content = read(extracted)
+    #
+    # if extracted != read(extracted):
+    #     store(extracted)
+    # time.sleep(2)
